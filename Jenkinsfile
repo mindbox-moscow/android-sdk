@@ -26,14 +26,14 @@ pipeline {
                     when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
                     agent {node {label 'hetzner-agent-1' }}
                     steps {
-                        sh label: 'Running lint check', script: './gredlew check'
+                        gradlew('check')
                     }
                 }
                 stage ('Unit Tests') {
                     when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
                     agent {node {label 'hetzner-agent-1' }}
                     steps {
-                        sh label: 'Running Unit test', script: './gredlew test'
+                        gradlew('test')
                     }
                 }
            }
