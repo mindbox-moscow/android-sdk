@@ -26,14 +26,14 @@ pipeline {
                     when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
                     agent {node {label 'hetzner-agent-1' }}
                     steps {
-                        sh label: 'Running lint check', script: './gredlew check'
+                        sh label: 'Running lint check', script: './gradlew check'
                     }
                 }
                 stage ('Unit Tests') {
                     when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
                     agent {node {label 'hetzner-agent-1' }}
                     steps {
-                        sh label: 'Running Unit test', script: './gredlew test'
+                        sh label: 'Running Unit test', script: './gradlew test'
                     }
                 }
            }
@@ -45,10 +45,10 @@ pipeline {
             steps {
                 script {
                     sshagent (credentials: ['umbrella-roman-parfinenko']) {
-                        sh label: 'Project cleanup', script:  './gredlew clean'
-                        sh label: 'Project build', script:  './gredlew build'
-                        sh label: 'Build a debug APK', script:  './gredlew assembleDebug'
-                        sh label: 'Assembles Test applications', script:  './gredlew assembleAndroidTest'
+                        sh label: 'Project cleanup', script:  './gradlew clean'
+                        sh label: 'Project build', script:  './gradlew build'
+                        sh label: 'Build a debug APK', script:  './gradlew assembleDebug'
+                        sh label: 'Assembles Test applications', script:  './gradlew assembleAndroidTest'
                     }
                 }
             }
