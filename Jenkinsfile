@@ -26,14 +26,14 @@ pipeline {
                     when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
                     agent {node {label 'hetzner-agent-1' }}
                     steps {
-                        gradlew('check')
+                        gradle('check')
                     }
                 }
                 stage ('Unit Tests') {
                     when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
                     agent {node {label 'hetzner-agent-1' }}
                     steps {
-                        gradlew('test')
+                        gradle('test')
                     }
                 }
            }
@@ -43,7 +43,7 @@ pipeline {
             agent {node {label 'hetzner-agent-1' }}
             when { anyOf { branch 'develop'; branch 'pipeline'} }
             steps {
-                gradlew('clean', 'build', 'assembleDebug', 'assembleAndroidTest')
+                gradle('clean', 'build', 'assembleDebug', 'assembleAndroidTest')
             }
         }
 
