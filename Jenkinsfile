@@ -65,7 +65,6 @@ pipeline {
             steps {
                 gradlew('clean', 'build', 'assembleDebug', 'assembleAndroidTest')
             }
-            }
         }
 
    }
