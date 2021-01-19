@@ -5,12 +5,7 @@ pipeline {
    agent none
    stages {
         stage('Preflight check'){
-            agent {
-                node {
-                    def workspace = WORKSPACE
-                    label 'hetzner-agent-1'
-                    }
-                }
+            agent {{node {label 'hetzner-agent-1'}}
             when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
             post {
                 success {
@@ -29,24 +24,14 @@ pipeline {
            parallel {
                 stage ('Gradle Lint') {
                     when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
-                    agent {
-                node {
-                    def workspace = WORKSPACE
-                    label 'hetzner-agent-1'
-                    }
-                }
+                    agent {{node {label 'hetzner-agent-1'}}
                     steps {
                         sh label: 'Running lint check', script: './gredlew check'
                     }
                 }
                 stage ('Unit Tests') {
                     when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
-                    agent {
-                node {
-                    def workspace = WORKSPACE
-                    label 'hetzner-agent-1'
-                    }
-                }
+                    agent {{node {label 'hetzner-agent-1'}}
                     steps {
                         sh label: 'Running Unit test', script: './gredlew test'
                     }
@@ -55,12 +40,7 @@ pipeline {
         }
 
         stage('Build MindBox SDK'){
-            agent {
-                node {
-                    def workspace = WORKSPACE
-                    label 'hetzner-agent-1'
-                    }
-                }
+            agent {{node {label 'hetzner-agent-1'}}
             when { anyOf { branch 'develop'; branch 'pipeline'} }
             steps {
                 gradlew('clean', 'build', 'assembleDebug', 'assembleAndroidTest')
