@@ -5,7 +5,7 @@ pipeline {
    agent none
    stages {
         stage('Preflight check'){
-            agent {node {label 'hetzner-agent-1' }}
+            agent {node {label 'hetzner-agent-1'}}
             when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
             post {
                 success {
@@ -26,14 +26,14 @@ pipeline {
                     when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
                     agent {node {label 'hetzner-agent-1' }}
                     steps {
-                        gradle('check')
+                        sh label: 'Running lint check', script: './gredlew check'
                     }
                 }
                 stage ('Unit Tests') {
                     when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
                     agent {node {label 'hetzner-agent-1' }}
                     steps {
-                        gradle('test')
+                        sh label: 'Running Unit test', script: './gredlew test'
                     }
                 }
            }
@@ -43,7 +43,14 @@ pipeline {
             agent {node {label 'hetzner-agent-1' }}
             when { anyOf { branch 'develop'; branch 'pipeline'} }
             steps {
-                gradle('clean', 'build', 'assembleDebug', 'assembleAndroidTest')
+                script {
+                    sshagent (credentials: ['umbrella-roman-parfinenko']) {
+                        sh label: 'Project cleanup', script:  './gredlew clean'
+                        sh label: 'Project build', script:  './gredlew build'
+                        sh label: 'Build a debug APK', script:  './gredlew assembleDebug'
+                        sh label: 'Assembles Test applications', script:  './gredlew assembleAndroidTest'
+                    }
+                }
             }
         }
 
