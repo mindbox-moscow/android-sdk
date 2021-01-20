@@ -33,11 +33,6 @@ pipeline {
                         sh label: 'Running Unit test', script: './gradlew test'
                     }
                 }
-                post {
-                    always {
-                        junit 'build/reports/**/*.xml'
-                    }
-                }
             }
         }
 
@@ -57,6 +52,9 @@ pipeline {
 
     }
     post {
+        always {
+            junit 'build/reports/**/*.xml'
+        }
         success {
            slackSend channel: 'jenkins-mindbox', \
            teamDomain: 'umbrellaitcom', \
