@@ -59,21 +59,24 @@ pipeline {
             }
         }
 
-   }
-   post {
-       success {
+    }
+    post {
+        always {
+            junit 'build/reports/**/*.xml'
+        }
+        success {
            slackSend channel: 'jenkins-mindbox', \
            teamDomain: 'umbrellaitcom', \
            color: '#5cb589', \
            message: "MindBox » Android-SDK - ${env.JOB_BASE_NAME} ${env.BUILD_DISPLAY_NAME} Success! (<${env.RUN_DISPLAY_URL}|Open>)", \
            tokenCredentialId: 'umbrella.devops-slack-integration-token'
-       }
-       failure {
+        }
+        failure {
            slackSend channel: 'jenkins-mindbox', \
            teamDomain: 'umbrellaitcom', \
            color: '#951d13', \
            message: "MindBox » Android-SDK - ${env.JOB_BASE_NAME} ${env.BUILD_DISPLAY_NAME} Failed! (<${env.RUN_DISPLAY_URL}|Open>)", \
            tokenCredentialId: 'umbrella.devops-slack-integration-token'
-       }
-   }
+        }
+    }
 }
