@@ -37,11 +37,6 @@ pipeline {
                     }
                 }
            }
-            post {
-                always {
-                    junit 'build/reports/**/*.xml'
-                }
-            }
         }
 
         stage('SDK Build'){
