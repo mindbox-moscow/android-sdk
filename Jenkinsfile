@@ -6,7 +6,7 @@ pipeline {
    stages {
         stage('Preflight check'){
             agent {node {label 'hetzner-agent-1'}}
-            when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
+            when { anyOf { branch 'develop'; branch 'release'; branch 'jenkins-pipeline'} }
             post {
                 success {
                     slackSend channel: 'jenkins-mindbox', \
@@ -19,29 +19,34 @@ pipeline {
             steps {sh "env | sort"}
         }
 
-       stage('MindBox Android SDK tests'){
-           when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
+       stage('SDK tests'){
+           when { anyOf { branch 'develop'; branch 'release'; branch 'jenkins-pipeline'} }
            parallel {
                 stage ('Gradle Lint') {
-                    when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
+                    when { anyOf { branch 'develop'; branch 'release'; branch 'jenkins-pipeline'} }
                     agent {node {label 'hetzner-agent-1' }}
                     steps {
                         sh label: 'Running lint check', script: './gradlew check'
                     }
                 }
                 stage ('Unit Tests') {
-                    when { anyOf { branch 'develop'; branch 'release'; branch 'pipeline'} }
+                    when { anyOf { branch 'develop'; branch 'release'; branch 'jenkins-pipeline'} }
                     agent {node {label 'hetzner-agent-1' }}
                     steps {
                         sh label: 'Running Unit test', script: './gradlew test'
                     }
                 }
            }
+            post {
+                always {
+                    junit 'build/reports/**/*.xml'
+                }
+            }
         }
 
-        stage('Build MindBox SDK'){
+        stage('SDK Build'){
             agent {node {label 'hetzner-agent-1' }}
-            when { anyOf { branch 'develop'; branch 'pipeline'} }
+            when { anyOf { branch 'develop'; branch 'jenkins-pipeline'} }
             steps {
                 script {
                     sshagent (credentials: ['umbrella-roman-parfinenko']) {
