@@ -1,6 +1,8 @@
 pipeline {
   environment {
      APP_NAME = 'mindbox-android-sdk'
+     BINTRAY_API_KEY = credentials('mindbox-bintray-api-key	')
+     BINTRAY_USER = 'uit-devops'
   }
    agent {node {label 'hetzner-agent-1'}}
    stages {
@@ -50,11 +52,11 @@ pipeline {
             }
         }
         stage('Upload'){
-            when { anyOf { branch 'release'; branch 'master'; branch 'jenkins-pipeline'} }
+            when { tag pattern: "release-\\d+", comparator: "REGEXP"}
             steps {
                 script {
                     sshagent (credentials: ['umbrella-roman-parfinenko']) {
-                        sh label: 'SDK upload', script:  './gradlew build bintrayUpload --info'
+                        sh label: 'SDK upload', script:  './gradlew build bintrayUpload -PbintrayUser=$BINTRAY_USER -PbintrayApiKey=$BINTRAY_API_KEY'
                     }
                 }
             }
