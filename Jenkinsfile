@@ -5,7 +5,7 @@ pipeline {
    agent {node {label 'hetzner-agent-1'}}
    stages {
         stage('Preflight check'){
-            when { anyOf { branch 'develop'; branch 'release'; branch 'jenkins-pipeline'} }
+            when { anyOf { branch 'release'; branch 'master'; branch 'develop'; branch 'jenkins-pipeline'} }
             post {
                 success {
                     slackSend channel: 'jenkins-mindbox', \
@@ -18,8 +18,8 @@ pipeline {
             steps {sh "env | sort"}
         }
 
-       stage('SDK tests'){
-            when { anyOf { branch 'develop'; branch 'release'; branch 'jenkins-pipeline'} }
+       stage('Tests'){
+            when { anyOf { branch 'release'; branch 'master'; branch 'develop'; branch 'jenkins-pipeline'} }
             parallel {
                 stage ('Gradle Lint') {
                     when { anyOf { branch 'develop'; branch 'release'; branch 'jenkins-pipeline'} }
@@ -28,7 +28,7 @@ pipeline {
                     }
                 }
                 stage ('Unit Tests') {
-                    when { anyOf { branch 'develop'; branch 'release'; branch 'jenkins-pipeline'} }
+                    when { anyOf { branch 'release'; branch 'master'; branch 'develop'; branch 'jenkins-pipeline'} }
                     steps {
                         sh label: 'Running Unit test', script: './gradlew test'
                     }
@@ -36,8 +36,8 @@ pipeline {
             }
         }
 
-        stage('SDK Build'){
-            when { anyOf { branch 'develop'; branch 'jenkins-pipeline'} }
+        stage('Build'){
+            when { anyOf { branch 'release'; branch 'master'; branch 'develop'; branch 'jenkins-pipeline'} }
             steps {
                 script {
                     sshagent (credentials: ['umbrella-roman-parfinenko']) {
@@ -45,6 +45,16 @@ pipeline {
                         sh label: 'Project build', script:  './gradlew build'
                         sh label: 'Build a debug APK', script:  './gradlew assembleDebug'
                         sh label: 'Assembles Test applications', script:  './gradlew assembleAndroidTest'
+                    }
+                }
+            }
+        }
+        stage('Upload'){
+            when { anyOf { branch 'release'; branch 'master'; branch 'jenkins-pipeline'} }
+            steps {
+                script {
+                    sshagent (credentials: ['umbrella-roman-parfinenko']) {
+                        sh label: 'SDK upload', script:  './gradlew build bintrayUpload --info'
                     }
                 }
             }
