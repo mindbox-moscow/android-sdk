@@ -52,9 +52,6 @@ pipeline {
 
     }
     post {
-        always {
-            junit 'build/reports/**/*.xml'
-        }
         success {
            slackSend channel: 'jenkins-mindbox', \
            teamDomain: 'umbrellaitcom', \
