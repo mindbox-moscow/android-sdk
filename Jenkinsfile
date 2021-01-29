@@ -27,13 +27,13 @@ pipeline {
                 stage ('Gradle Lint') {
                     // when { anyOf { branch 'develop'; branch 'release'; branch 'jenkins-pipeline'} }
                     steps {
-                        sh label: 'Running lint check', script: './gradlew check'
+                        sh label: 'Running lint check', script: 'export ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT && ./gradlew check'
                     }
                 }
                 stage ('Unit Tests') {
                     // when { anyOf { branch 'release'; branch 'master'; branch 'develop'; branch 'jenkins-pipeline'} }
                     steps {
-                        sh label: 'Running Unit test', script: './gradlew test'
+                        sh label: 'Running Unit test', script: 'export ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT && ./gradlew test'
                     }
                 }
                 // stage ('Vulnerabilities Tests') {
@@ -45,7 +45,7 @@ pipeline {
                 //                     -e MONITOR=true \
                 //                     -e USER_ID=$(id -u $USER) \
                 //                     -v $PWD/:/project \
-                //                     snyk/snyk-cli:gradle-4.4 test --org=$SNYK_ORG --project-name=$APP_NAME'
+                //                     snyk/snyk-cli:gradle-5.4 test --org=$SNYK_ORG --project-name=$APP_NAME'
                 //         }
                 //     }
                 // }
