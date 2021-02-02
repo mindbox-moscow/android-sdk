@@ -27,13 +27,13 @@ pipeline {
                 stage ('Gradle Lint') {
                     // when { anyOf { branch 'develop'; branch 'release'; branch 'jenkins-pipeline'} }
                     steps {
-                        sh label: 'Running lint check', script: 'export ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT && ./gradlew check'
+                        sh label: 'Running lint check', script: './gradlew check'
                     }
                 }
                 stage ('Unit Tests') {
                     // when { anyOf { branch 'release'; branch 'master'; branch 'develop'; branch 'jenkins-pipeline'} }
                     steps {
-                        sh label: 'Running Unit test', script: 'export ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT && ./gradlew test'
+                        sh label: 'Running Unit test', script: './gradlew test'
                     }
                 }
                 // stage ('Vulnerabilities Tests') {
