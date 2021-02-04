@@ -60,8 +60,6 @@ object Mindbox {
 
                 if (configuration.deviceUuid.trim().isEmpty()) {
                     configuration.deviceUuid = initDeviceId(context)
-                } else {
-                    configuration.deviceUuid.trim()
                 }
 
                 firstInitialization(configuration)
