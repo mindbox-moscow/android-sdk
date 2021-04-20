@@ -209,6 +209,11 @@ object Mindbox {
         MindboxLogger.level = level
     }
 
+    fun testReadSpeed() {
+        DbManager.testPaperRead()
+        DbManager.testRoomRead()
+    }
+
     internal fun initComponents(context: Context) {
         SharedPreferencesManager.with(context)
         Paper.init(context)

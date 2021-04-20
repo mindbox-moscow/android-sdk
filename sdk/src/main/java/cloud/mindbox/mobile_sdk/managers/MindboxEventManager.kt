@@ -40,12 +40,13 @@ internal object MindboxEventManager {
             val fields = hashMapOf(
                 EventParameters.UNIQ_KEY.fieldName to uniqKey
             )
-            DbManager.addEventToQueue(
-                context, Event(
-                    eventType = EventType.PUSH_DELIVERED,
-                    additionalFields = fields
-                )
+            val event = RoomEvent(
+                operation = "",
+                endpoint = "/mobile-push/delivered",
+                additionalFields = fields
             )
+            DbManager.addEventToPaperQueue(context, event)
+            DbManager.addEventToRoomQueue(context, event)
         }.logOnException()
     }
 
