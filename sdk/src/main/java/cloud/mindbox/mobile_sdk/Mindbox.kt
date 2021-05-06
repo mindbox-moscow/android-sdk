@@ -2,6 +2,7 @@ package cloud.mindbox.mobile_sdk
 
 import android.app.Application
 import android.content.Context
+import androidx.lifecycle.ProcessLifecycleOwner
 import cloud.mindbox.mobile_sdk.logger.Level
 import cloud.mindbox.mobile_sdk.logger.MindboxLogger
 import cloud.mindbox.mobile_sdk.managers.*
@@ -24,6 +25,7 @@ object Mindbox {
     private val mindboxScope = CoroutineScope(Default + mindboxJob)
     private val deviceUuidCallbacks = ConcurrentHashMap<String, (String) -> Unit>()
     private val fmsTokenCallbacks = ConcurrentHashMap<String, (String?) -> Unit>()
+    private lateinit var lifecycleManager: LifecycleManager
 
     /**
      * Subscribe to gets token of Firebase Messaging Service used by SDK
@@ -192,11 +194,21 @@ object Mindbox {
                 sendTrackVisitEvent(context, configuration.endpointId)
 
                 // Handle back app in foreground
-                val lifecycleManager = LifecycleManager {
-                    sendTrackVisitEvent(context, configuration.endpointId)
+                (context.applicationContext as? Application)?.apply {
+                    if (!Mindbox::lifecycleManager.isInitialized) {
+                        lifecycleManager = LifecycleManager {
+                            sendTrackVisitEvent(context, configuration.endpointId)
+                        }
+                    } else {
+                        unregisterComponentCallbacks(lifecycleManager)
+                        unregisterActivityLifecycleCallbacks(lifecycleManager)
+                        ProcessLifecycleOwner.get().lifecycle.removeObserver(lifecycleManager)
+
+                    }
+                    registerComponentCallbacks(lifecycleManager)
+                    registerActivityLifecycleCallbacks(lifecycleManager)
+                    ProcessLifecycleOwner.get().lifecycle.addObserver(lifecycleManager)
                 }
-                (context.applicationContext as? Application)
-                    ?.registerActivityLifecycleCallbacks(lifecycleManager)
             }
         }.returnOnException { }
     }
@@ -247,7 +259,10 @@ object Mindbox {
         return adid.await()
     }
 
-    private suspend fun firstInitialization(context: Context, configuration: MindboxConfiguration) {
+    private suspend fun firstInitialization(
+        context: Context,
+        configuration: MindboxConfiguration
+    ) {
         runCatching {
             val firebaseToken = withContext(mindboxScope.coroutineContext) {
                 IdentifierManager.registerFirebaseToken()
@@ -310,7 +325,7 @@ object Mindbox {
         }.logOnException()
     }
 
-    private fun sendTrackVisitEvent(context: Context, endpointId: String) {
+    internal fun sendTrackVisitEvent(context: Context, endpointId: String) {
         val trackVisitData = TrackVisitData(
             ianaTimeZone = TimeZone.getDefault().id,
             endpointId = endpointId
