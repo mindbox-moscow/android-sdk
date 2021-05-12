@@ -1,14 +1,12 @@
 package cloud.mindbox.mobile_sdk.managers
 
 import android.content.Context
-import cloud.mindbox.mobile_sdk.MindboxConfiguration
-import cloud.mindbox.mobile_sdk.MindboxLogger
+import cloud.mindbox.mobile_sdk.logger.MindboxLogger
 import cloud.mindbox.mobile_sdk.models.*
 import cloud.mindbox.mobile_sdk.network.MindboxServiceGenerator
 import cloud.mindbox.mobile_sdk.toUrlQueryString
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
-import com.android.volley.DefaultRetryPolicy.DEFAULT_MAX_RETRIES
 import com.android.volley.NetworkResponse
 import com.android.volley.Request
 import org.json.JSONException
@@ -18,28 +16,35 @@ import java.util.*
 internal object GatewayManager {
 
     private const val TIMEOUT_DELAY = 60000
+    private const val MAX_RETRIES = 0
 
     private fun buildEventUrl(
-        configuration: MindboxConfiguration,
+        configuration: Configuration,
+        deviceUuid: String,
         event: Event
     ): String {
 
         val urlQueries: HashMap<String, String> = hashMapOf(
-            UrlQuery.ENDPOINT_ID.value to configuration.endpointId,
-            UrlQuery.DEVICE_UUID.value to configuration.deviceUuid,
+            UrlQuery.DEVICE_UUID.value to deviceUuid,
             UrlQuery.TRANSACTION_ID.value to event.transactionId,
             UrlQuery.DATE_TIME_OFFSET.value to getTimeOffset(event.enqueueTimestamp)
         )
 
         when (event.eventType) {
-            EventType.APP_INFO_UPDATED,
-            EventType.APP_INSTALLED,
-            EventType.PUSH_CLICKED -> {
+            is EventType.AppInstalled,
+            is EventType.AppInfoUpdated,
+            is EventType.PushClicked -> {
+                urlQueries[UrlQuery.ENDPOINT_ID.value] = configuration.endpointId
                 urlQueries[UrlQuery.OPERATION.value] = event.eventType.operation
             }
-            EventType.PUSH_DELIVERED -> {
+            is EventType.PushDelivered -> {
+                urlQueries[UrlQuery.ENDPOINT_ID.value] = configuration.endpointId
                 urlQueries[UrlQuery.UNIQ_KEY.value] =
                     event.additionalFields?.get(EventParameters.UNIQ_KEY.fieldName) ?: ""
+            }
+            is EventType.AsyncOperation -> {
+                urlQueries[UrlQuery.ENDPOINT_ID.value] = configuration.endpointId
+                urlQueries[UrlQuery.OPERATION.value] = event.eventType.operation
             }
         }
 
@@ -48,14 +53,15 @@ internal object GatewayManager {
 
     fun sendEvent(
         context: Context,
-        configuration: MindboxConfiguration,
+        configuration: Configuration,
+        deviceUuid: String,
         event: Event,
         isSuccess: (Boolean) -> Unit
     ) {
         try {
 
             val requestType: Int = getRequestType(event.eventType)
-            val url: String = buildEventUrl(configuration, event)
+            val url: String = buildEventUrl(configuration, deviceUuid, event)
             val jsonRequest: JSONObject? = convertBodyToJson(event.body)
 
             val request = MindboxRequest(requestType, url, configuration, jsonRequest,
@@ -85,7 +91,7 @@ internal object GatewayManager {
                 }
             ).apply {
                 setShouldCache(false)
-                retryPolicy = DefaultRetryPolicy(TIMEOUT_DELAY, DEFAULT_MAX_RETRIES, DEFAULT_BACKOFF_MULT)
+                retryPolicy = DefaultRetryPolicy(TIMEOUT_DELAY, MAX_RETRIES, DEFAULT_BACKOFF_MULT)
             }
 
             MindboxServiceGenerator.getInstance(context)?.addToRequestQueue(request)
@@ -95,18 +101,18 @@ internal object GatewayManager {
         }
     }
 
-    private fun getRequestType(eventType: EventType): Int {
-        return when (eventType) {
-            EventType.APP_INSTALLED,
-            EventType.APP_INFO_UPDATED,
-            EventType.PUSH_CLICKED -> Request.Method.POST
-            EventType.PUSH_DELIVERED -> Request.Method.GET
-        }
+    private fun getRequestType(eventType: EventType): Int = when (eventType) {
+        is EventType.AppInstalled,
+        is EventType.AppInfoUpdated,
+        is EventType.PushClicked,
+        is EventType.TrackVisit,
+        is EventType.AsyncOperation -> Request.Method.POST
+        is EventType.PushDelivered -> Request.Method.GET
     }
 
-    private fun getTimeOffset(timeMls: Long): String {
-        return (Date().time - timeMls).toString()
-    }
+    private fun getTimeOffset(
+        timeMls: Long
+    ): String = (System.currentTimeMillis() - timeMls).toString()
 
     private fun convertBodyToJson(body: String?): JSONObject? {
         return if (body == null) {
